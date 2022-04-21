@@ -62,7 +62,7 @@ class SocketSource : public Source
     void operator=(const SocketSource&) = delete;
     void operator=(SocketSource&&) = delete;
 
-    SocketSource(int port);
+    SocketSource(int port, const std::string& host);
     ~SocketSource() override;
     void close() override;
     bool is_open() override;

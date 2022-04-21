@@ -81,15 +81,21 @@ class LiveCommand:
             default=None,
             type=int,
         )
+        parser.add_argument(
+            "host",
+            help="Remote host to connect to",
+            default=None,
+            type=str,
+        )
 
     def run(self, args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
         with suppress(KeyboardInterrupt):
-            self.start_live_interface(args.port)
+            self.start_live_interface(args.port, args.host)
 
-    def start_live_interface(self, port: int) -> None:
+    def start_live_interface(self, port: int, host: str) -> None:
         if port >= 2**16 or port <= 0:
             raise MemrayCommandError(f"Invalid port: {port}", exit_code=1)
-        with SocketReader(port=port) as reader:
+        with SocketReader(port=port, host=host or "") as reader:
             tui = TUI(reader.pid, reader.command_line, reader.has_native_traces)
 
             def _get_renderable() -> Layout:

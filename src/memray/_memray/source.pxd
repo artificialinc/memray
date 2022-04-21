@@ -10,4 +10,4 @@ cdef extern from "source.h" namespace "memray::io":
         FileSource(const string& file_name) except+ IOError
 
     cdef cppclass SocketSource(Source):
-        SocketSource(int port) except+ IOError
+        SocketSource(int port, const string& host) except+ IOError

@@ -326,7 +326,7 @@ cdef class FileReader:
 
     def __dealloc__(self):
         self._reader.reset()
-    
+
     def _yield_allocations(self, size_t index, merge_threads):
         for elem in Py_GetSnapshotAllocationRecords(
             self._get_reader().allocationRecords(), index, merge_threads):
@@ -359,11 +359,11 @@ cdef class FileReader:
             alloc = AllocationRecord(record.toPythonObject())
             (<AllocationRecord> alloc)._reader = self._reader
             yield alloc
-    
+
     def get_memory_records(self):
         # First, parse the entire file to get all possible memory records
         self._populate_allocations()
-        # Now, yield all available memory records 
+        # Now, yield all available memory records
         for record in self._get_reader().memoryRecords():
             yield MemoryRecord(record.ms_since_epoch, record.rss)
 
@@ -410,13 +410,15 @@ cdef class SocketReader:
     cdef shared_ptr[RecordReader] _reader
     cdef object _header
     cdef object _port
+    cdef object _host
 
-    def __cinit__(self, int port):
+    def __cinit__(self, int port, host: str):
         self._impl = NULL
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, host: str):
         self._header = {}
         self._port = port
+        self._host = host
 
     cdef _teardown(self):
         with nogil:
@@ -427,7 +429,7 @@ cdef class SocketReader:
         # Creating a SocketSource can raise Python exceptions (if is interrupted by signal
         # handlers). If this happens, this method will propagate the appropriate exception.
         # We cannot use make_unique or C++ exceptions from SocketSource() won't be caught.
-        cdef SocketSource* source = new SocketSource(self._port)
+        cdef SocketSource* source = new SocketSource(self._port, self._host)
         return unique_ptr[SocketSource](source)
 
     def __enter__(self):

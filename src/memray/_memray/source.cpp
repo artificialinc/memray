@@ -136,7 +136,7 @@ SocketBuf::xsgetn(char* destination, std::streamsize length)
     return length;
 }
 
-SocketSource::SocketSource(int port)
+SocketSource::SocketSource(int port, const std::string& host)
 {
     struct addrinfo hints = {};
     struct addrinfo* all_addresses = nullptr;
@@ -149,7 +149,13 @@ SocketSource::SocketSource(int port)
     std::string port_str = std::to_string(port);
     while (curr_address == nullptr) {
         Py_BEGIN_ALLOW_THREADS;
-        if ((rv = ::getaddrinfo(nullptr, port_str.c_str(), &hints, &all_addresses)) != 0) {
+        if ((rv = ::getaddrinfo(
+                     (host == "") ? nullptr : host.c_str(),
+                     port_str.c_str(),
+                     &hints,
+                     &all_addresses))
+            != 0)
+        {
             LOG(ERROR) << "Encountered error in 'getaddrinfo' call: " << ::gai_strerror(rv);
             throw IoError{"Failed to resolve host IP and port"};
         }
@@ -157,6 +163,7 @@ SocketSource::SocketSource(int port)
         // loop through all the results and connect to the first we can
         for (curr_address = all_addresses; curr_address != nullptr; curr_address = curr_address->ai_next)
         {
+            LOG(ERROR) << curr_address->ai_addr;
             if ((d_sockfd = ::socket(
                          curr_address->ai_family,
                          curr_address->ai_socktype,
